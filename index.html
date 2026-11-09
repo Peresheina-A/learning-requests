@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Учебные заявки — доступ к инструментам</title>
+  <style>
+    :root { color-scheme: light; --ink:#242536; --muted:#63677a; --accent:#6251c9; --line:#e2e4ed; }
+    * { box-sizing:border-box; }
+    body { margin:0; background:#f5f6fa; color:var(--ink); font:16px/1.55 system-ui,-apple-system,"Segoe UI",sans-serif; }
+    header { background:white; border-bottom:1px solid var(--line); }
+    .topbar { max-width:1100px; margin:auto; padding:20px 28px; display:flex; align-items:center; gap:12px; }
+    .logo { display:grid; place-items:center; width:38px; height:38px; border-radius:12px; background:var(--accent); color:white; font-weight:750; }
+    .brand { font-weight:700; }
+    .demo { margin-left:auto; font-size:13px; background:#f0edff; color:#5543b7; padding:5px 12px; border-radius:20px; }
+    main { max-width:1100px; margin:0 auto; padding:40px 28px 48px; }
+    .eyebrow { color:var(--accent); font-size:12px; font-weight:750; letter-spacing:.12em; text-transform:uppercase; }
+    h1 { margin:8px 0; font-size:clamp(28px,4vw,38px); letter-spacing:-.035em; line-height:1.2; }
+    .intro { margin:12px 0 28px; max-width:700px; color:var(--muted); }
+    .layout { display:grid; grid-template-columns:1.1fr 1fr; gap:24px; align-items:start; }
+    .card { background:white; border:1px solid var(--line); border-radius:20px; padding:28px; box-shadow:0 5px 20px #24253604; }
+    h2 { margin:0 0 6px; font-size:21px; letter-spacing:-.02em; }
+    .sub { color:var(--muted); font-size:14px; margin:0 0 24px; }
+    label { display:block; font-size:14px; font-weight:650; margin-bottom:7px; }
+    input,textarea { display:block; width:100%; border:1px solid #cbd0df; border-radius:10px; padding:12px 14px; font:inherit; color:var(--ink); background:white; }
+    textarea { resize:vertical; min-height:110px; }
+    input::placeholder,textarea::placeholder { color:#7c8192; }
+    input:focus,textarea:focus { border-color:var(--accent); }
+    :focus-visible { outline:3px solid #c5baf7; outline-offset:3px; }
+    [aria-invalid="true"] { border-color:#b32637; }
+    .field { margin-bottom:21px; }
+    .hint { display:block; color:var(--muted); font-size:12px; margin-top:7px; }
+    button { border:0; border-radius:10px; padding:13px 18px; font:650 14px/1.4 system-ui,sans-serif; cursor:pointer; background:var(--accent); color:white; }
+    button:hover { background:#5140b0; }
+    button:disabled { opacity:.6; cursor:wait; }
+    .primary { width:100%; }
+    .note { font-size:12px; color:var(--muted); margin:12px 0 0; }
+    .error { color:#a32132; font-size:13px; margin:7px 0 0; }
+    .message { padding:12px 14px; border-radius:10px; background:#fff0f1; margin-bottom:16px; overflow-wrap:anywhere; }
+    .empty { border:1px dashed #d7d8e5; border-radius:14px; background:#fafaff; padding:30px 22px; text-align:center; margin-top:22px; }
+    .empty-icon { display:grid; place-items:center; width:44px; height:44px; margin:0 auto 12px; border-radius:14px; background:#eeebfb; color:var(--accent); font-size:24px; }
+    .empty strong { display:block; font-size:15px; }
+    .empty p { color:var(--muted); font-size:14px; margin:8px 0 0; }
+    .badge { display:inline-block; background:#e4f5ed; color:#226348; font-size:13px; font-weight:650; padding:5px 11px; border-radius:20px; }
+    .result-heading { display:flex; flex-wrap:wrap; gap:12px; justify-content:space-between; align-items:center; margin:24px 0 18px; }
+    .result-heading strong { font-size:22px; }
+    dl { margin:0; }
+    dt { color:var(--muted); font-size:12px; margin-top:16px; }
+    dd { margin:4px 0 0; overflow-wrap:anywhere; white-space:pre-wrap; }
+    .next { border-top:1px solid var(--line); margin-top:24px; padding-top:18px; font-size:14px; }
+    .next p { margin:6px 0 0; color:var(--muted); }
+    .search { margin-top:24px; }
+    .search-row { display:flex; align-items:flex-start; gap:12px; }
+    .search-input { flex:1; max-width:300px; }
+    .search button { background:#eeebfb; color:#5140b0; white-space:nowrap; }
+    .search button:hover { background:#e3def9; }
+    footer { margin-top:24px; color:var(--muted); font-size:12px; text-align:center; }
+    [hidden] { display:none !important; }
+    @media(max-width:700px) { main { padding:28px 16px; } .topbar { padding:16px; } .layout { grid-template-columns:1fr; gap:16px; } .card { padding:22px; } .search { margin-top:16px; } .search-row { flex-direction:column; } .search-input,.search button { max-width:none; width:100%; } .demo { font-size:11px; padding:4px 8px; } }
+  </style>
+</head>
+<body>
+  <header><div class="topbar"><span class="logo" aria-hidden="true">У</span><span class="brand">Учебные заявки</span><span class="demo">Учебный прототип</span></div></header>
+  <main>
+    <div class="eyebrow">Рабочие инструменты</div>
+    <h1>Доступ начинается с заявки</h1>
+    <p class="intro">Расскажите, какой инструмент вам нужен. Мы сохраним учебную заявку и покажем её номер — по нему можно вернуться к результату позже.</p>
+    <div class="layout">
+      <section class="card" aria-labelledby="create-title">
+        <h2 id="create-title">Новая заявка</h2>
+        <p class="sub">Два поля, чтобы описать ваш запрос.</p>
+        <form id="create-form" novalidate>
+          <div class="field"><label for="tool">Какой инструмент нужен?</label><input id="tool" name="tool" placeholder="Например, Учебная Jira" required aria-describedby="tool-hint tool-error"><span class="hint" id="tool-hint">Укажите название программы или рабочего пространства.</span><p class="error" id="tool-error" hidden></p></div>
+          <div class="field"><label for="reason">Для чего нужен доступ?</label><textarea id="reason" name="reason" placeholder="Например, чтобы получить первую задачу и обновлять её статус" required aria-describedby="reason-error"></textarea><p class="error" id="reason-error" hidden></p></div>
+          <p id="create-error" class="error message" role="alert" hidden></p>
+          <button class="primary" id="create-button" type="submit">Отправить заявку</button>
+          <p class="note">Это учебная заявка. Реальный доступ к инструментам не выдаётся.</p>
+        </form>
+      </section>
+      <section class="card" aria-labelledby="result-title" aria-live="polite" aria-atomic="true" id="result-panel">
+        <h2 id="result-title">Результат заявки</h2>
+        <p class="sub">Здесь появятся номер, данные и текущий статус.</p>
+        <div id="empty" class="empty"><div class="empty-icon" aria-hidden="true">↗</div><strong>Пока нет выбранной заявки</strong><p>Отправьте новую заявку или найдите сохранённую по номеру ниже.</p></div>
+        <p id="loading" hidden>Получаем результат…</p>
+        <div id="result" hidden>
+          <div class="result-heading"><strong id="request-number"></strong><span class="badge">Создана</span></div>
+          <dl><dt>Инструмент</dt><dd id="result-tool"></dd><dt>Причина запроса</dt><dd id="result-reason"></dd></dl>
+          <div class="next"><strong>Что дальше?</strong><p>Заявка сохранена. Доступ ещё не выдан. Сохраните номер, чтобы проверить заявку позже. Согласование и выдача доступа в этом прототипе не выполняются.</p></div>
+        </div>
+      </section>
+    </div>
+    <section class="card search" aria-labelledby="search-title">
+      <h2 id="search-title">Уже отправляли заявку?</h2><p class="sub">Введите её номер. Результат появится в карточке выше.</p>
+      <form id="search-form" novalidate>
+        <label for="request-id">Номер заявки</label>
+        <div class="search-row"><div class="search-input"><input id="request-id" name="id" type="text" inputmode="numeric" placeholder="Например, 1" required aria-describedby="id-error"><p class="error" id="id-error" hidden></p></div><button id="search-button" type="submit">Проверить статус</button></div>
+        <p id="search-error" class="error message" role="alert" hidden></p>
+      </form>
+    </section>
+    <footer>Учебный сервис · Заявки хранятся локально в SQLite</footer>
+  </main>
+  <script>
+    const byId = id => document.getElementById(id);
+    let busy = false;
+    function showError(id, text) {
+      byId(id).textContent = text;
+      byId(id).hidden = !text;
+    }
+    function clearErrors() {
+      for (const id of ['tool-error','reason-error','id-error','create-error','search-error']) showError(id, '');
+      for (const id of ['tool','reason','request-id']) byId(id).removeAttribute('aria-invalid');
+    }
+    function fieldError(field, errorId, message) {
+      showError(errorId, message);
+      byId(field).setAttribute('aria-invalid', 'true');
+    }
+    function setBusy(value, action) {
+      busy = value;
+      byId('create-button').disabled = value;
+      byId('search-button').disabled = value;
+      byId('create-button').textContent = value && action === 'create' ? 'Отправляем…' : 'Отправить заявку';
+      byId('search-button').textContent = value && action === 'search' ? 'Ищем…' : 'Проверить статус';
+      byId('loading').hidden = !value;
+      byId('result-panel').setAttribute('aria-busy', String(value));
+    }
+    function renderResult(data) {
+      byId('request-number').textContent = `Заявка №${data.id}`;
+      byId('result-tool').textContent = data.tool;
+      byId('result-reason').textContent = data.reason;
+      byId('request-id').value = String(data.id);
+      byId('empty').hidden = true;
+      byId('result').hidden = false;
+    }
+    async function send(action, path, options = {}) {
+      byId('empty').hidden = true;
+      byId('result').hidden = true;
+      setBusy(true, action);
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 12000);
+      try {
+        const response = await fetch(path, {...options, signal:controller.signal});
+        if (!response.ok) {
+          if (response.status === 404) throw new Error('Заявка с таким номером не найдена. Проверьте номер.');
+          if (response.status === 422) {
+            const body = await response.json();
+            if (action === 'create' && Array.isArray(body.detail)) {
+              for (const issue of body.detail) {
+                const field = issue.loc?.[1];
+                if (field === 'tool' || field === 'reason') fieldError(field, `${field}-error`, 'Введите непустой текст.');
+              }
+            }
+            throw new Error('Проверьте заполнение полей.');
+          }
+          throw new Error(action === 'create' ? 'Сервис не подтвердил создание заявки. Не отправляйте запрос многократно.' : 'Не удалось получить заявку. Попробуйте позже.');
+        }
+        renderResult(await response.json());
+      } catch (error) {
+        const connectionError = error.name === 'AbortError' || error instanceof TypeError;
+        const text = connectionError
+          ? (action === 'create' ? 'Не удалось получить подтверждение от сервера. Заявка могла сохраниться; повторная отправка может создать дубликат. В прототипе пока нет поиска без номера.' : 'Сервер не отвечает. Проверьте, запущено ли приложение, и попробуйте позже.')
+          : error.message;
+        showError(action === 'create' ? 'create-error' : 'search-error', text);
+        byId('empty').hidden = false;
+      } finally {
+        clearTimeout(timeout);
+        setBusy(false, action);
+      }
+    }
+    byId('create-form').addEventListener('submit', event => {
+      event.preventDefault();
+      if (busy) return;
+      clearErrors();
+      const tool = byId('tool').value.trim();
+      const reason = byId('reason').value.trim();
+      if (!tool) fieldError('tool','tool-error','Укажите инструмент, к которому нужен доступ.');
+      if (!reason) fieldError('reason','reason-error','Расскажите, для чего нужен доступ.');
+      if (!tool || !reason) { byId(!tool ? 'tool' : 'reason').focus(); return; }
+      send('create','/api/requests',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({tool,reason})});
+    });
+    byId('search-form').addEventListener('submit', event => {
+      event.preventDefault();
+      if (busy) return;
+      clearErrors();
+      const id = byId('request-id').value.trim();
+      if (!/^[1-9]\d*$/.test(id)) {
+        fieldError('request-id','id-error','Введите целый положительный номер, например 1.');
+        byId('request-id').focus();
+        return;
+      }
+      send('search',`/api/requests/${encodeURIComponent(id)}`);
+    });
+  </script>
+</body>
+</html>
