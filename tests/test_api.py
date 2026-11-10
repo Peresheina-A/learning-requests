@@ -114,6 +114,11 @@ class RequestsApiTests(unittest.TestCase):
         )
         self.assertEqual(self.call("/api/requests/not-a-number")[0], 422)
 
+    def test_invalid_suggestion_text(self):
+        for payload in [{}, {"text": "   "}, {"text": "x" * 2001}]:
+            with self.subTest(payload=payload):
+                self.assertEqual(self.call("/api/suggestions", payload)[0], 422)
+
     def test_request_survives_restart(self):
         saved = self.create()
         self.stop_server(self.server)

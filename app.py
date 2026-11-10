@@ -7,6 +7,7 @@ from fastapi.responses import FileResponse
 from pydantic import BaseModel, ConfigDict, Field
 
 import storage
+import llm
 
 
 @asynccontextmanager
@@ -52,6 +53,31 @@ class SavedRequest(RequestData):
     status: Literal["created"] = Field(
         title="Статус", description="created — заявка создана; доступ ещё не выдан."
     )
+
+
+class SuggestionInput(BaseModel):
+    model_config = ConfigDict(str_strip_whitespace=True)
+
+    text: str = Field(min_length=1, max_length=2000, title="Описание запроса")
+
+
+@app.post(
+    "/api/suggestions",
+    response_model=llm.DraftFields,
+    tags=["ИИ-помощник"],
+    summary="Предложить заполнение формы",
+    description="Локальная модель извлекает поля из текста. Заявка не создаётся. Проверьте предложенные данные перед отправкой.",
+    responses={
+        502: {"description": "Некорректный ответ модели"},
+        503: {"description": "Ollama или модель недоступна"},
+        504: {"description": "Время ожидания истекло"},
+    },
+)
+def suggest_fields(data: SuggestionInput) -> llm.DraftFields:
+    try:
+        return llm.suggest_fields(data.text)
+    except llm.LLMError as error:
+        raise HTTPException(status_code=error.status_code, detail=str(error)) from error
 
 
 @app.get("/", include_in_schema=False)

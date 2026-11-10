@@ -69,6 +69,19 @@
       <section class="card" aria-labelledby="create-title">
         <h2 id="create-title">Новая заявка</h2>
         <p class="sub">Два поля, чтобы описать ваш запрос.</p>
+        <form id="ai-form" novalidate>
+          <div class="field">
+            <label for="ai-text">Опишите запрос своими словами</label>
+            <textarea id="ai-text" maxlength="2000" placeholder="Мне нужен доступ к Jira, чтобы получить первую задачу" aria-describedby="ai-hint ai-error"></textarea>
+            <span id="ai-hint" class="hint">Необязательно. Локальная модель предложит заполнение двух полей ниже.</span>
+          </div>
+          <button id="ai-button" type="submit">Заполнить с помощью ИИ</button>
+          <p id="ai-progress" class="note" role="status" hidden>Модель готовит поля… Первый запрос может занять до 90 секунд.</p>
+          <p id="ai-error" class="error message" role="alert" hidden></p>
+          <p id="ai-note" class="note" role="status" hidden></p>
+          <p class="note">ИИ может ошибаться. Проверьте и при необходимости исправьте поля. Заявка появится только после нажатия «Отправить заявку».</p>
+        </form>
+        <hr style="border:0;border-top:1px solid var(--line);margin:24px 0">
         <form id="create-form" novalidate>
           <div class="field"><label for="tool">Какой инструмент нужен?</label><input id="tool" name="tool" placeholder="Например, Учебная Jira" required aria-describedby="tool-hint tool-error"><span class="hint" id="tool-hint">Укажите название программы или рабочего пространства.</span><p class="error" id="tool-error" hidden></p></div>
           <div class="field"><label for="reason">Для чего нужен доступ?</label><textarea id="reason" name="reason" placeholder="Например, чтобы получить первую задачу и обновлять её статус" required aria-describedby="reason-error"></textarea><p class="error" id="reason-error" hidden></p></div>
@@ -118,9 +131,12 @@
       busy = value;
       byId('create-button').disabled = value;
       byId('search-button').disabled = value;
+      byId('ai-button').disabled = value;
+      for (const id of ['tool', 'reason', 'ai-text']) byId(id).disabled = value && action === 'ai';
       byId('create-button').textContent = value && action === 'create' ? 'Отправляем…' : 'Отправить заявку';
       byId('search-button').textContent = value && action === 'search' ? 'Ищем…' : 'Проверить статус';
-      byId('loading').hidden = !value;
+      byId('loading').hidden = !value || action === 'ai';
+      byId('ai-progress').hidden = !value || action !== 'ai';
       byId('result-panel').setAttribute('aria-busy', String(value));
     }
     function renderResult(data) {
@@ -166,6 +182,55 @@
         setBusy(false, action);
       }
     }
+    byId('ai-form').addEventListener('submit', async event => {
+      event.preventDefault();
+      if (busy) return;
+      showError('ai-error', '');
+      byId('ai-note').hidden = true;
+      const text = byId('ai-text').value.trim();
+      if (!text || text.length > 2000) {
+        showError('ai-error', 'Опишите запрос: от 1 до 2000 символов.');
+        byId('ai-text').focus();
+        return;
+      }
+      setBusy(true, 'ai');
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 95000);
+      try {
+        const response = await fetch('/api/suggestions', {
+          method: 'POST', headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({text}), signal: controller.signal
+        });
+        if (!response.ok) {
+          let message = 'Не удалось получить подсказку. Заполните форму вручную.';
+          try {
+            const body = await response.json();
+            if (typeof body.detail === 'string') message = body.detail;
+          } catch {}
+          throw new Error(message);
+        }
+        const data = await response.json();
+        if (typeof data.tool !== 'string' || typeof data.reason !== 'string') {
+          throw new Error('ИИ вернул некорректные поля. Заполните форму вручную.');
+        }
+        clearErrors();
+        byId('tool').value = data.tool;
+        byId('reason').value = data.reason;
+        byId('ai-note').textContent = data.tool && data.reason
+          ? 'Поля заполнены. Проверьте их перед отправкой. Заявка ещё не создана.'
+          : 'ИИ не нашёл все сведения. Дополните пустые поля вручную. Заявка ещё не создана.';
+        byId('ai-note').hidden = false;
+      } catch (error) {
+        showError('ai-error', error.name === 'AbortError'
+          ? 'Время ожидания ИИ истекло. Можно заполнить форму вручную.'
+          : error instanceof TypeError
+            ? 'Нет связи с приложением. Проверьте, запущен ли backend.'
+            : error.message);
+      } finally {
+        clearTimeout(timeout);
+        setBusy(false, 'ai');
+      }
+    });
     byId('create-form').addEventListener('submit', event => {
       event.preventDefault();
       if (busy) return;
