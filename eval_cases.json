@@ -1,0 +1,8 @@
+[
+  {"text": "Мне нужен доступ к Confluence", "tool": "Confluence", "reason_empty": true},
+  {"text": "Мне нужен доступ", "tool": "", "reason_empty": true},
+  {"text": "Нужен доступ к Jira", "tool": "Jira", "reason_empty": true},
+  {"text": "Пожалуйста, предоставьте доступ к Confluence", "tool": "Confluence", "reason_empty": true},
+  {"text": "Нужна Jira, чтобы получить первую задачу", "tool": "Jira", "reason_contains": "задач"},
+  {"text": "Confluence для чтения документации", "tool": "Confluence", "reason_contains": "документац"}
+]

@@ -1,0 +1,14 @@
+{
+  "title": "Рабочие инструменты",
+  "text": "Для работы с таблицами и анализа данных познакомься с Excel. Начни с учебника, затем попробуй импортировать небольшой учебный набор данных и оформить его как таблицу.",
+  "resources": [
+    {
+      "title": "Учебник Microsoft: импорт данных в Excel и создание модели данных",
+      "url": "https://support.microsoft.com/ru-ru/excel/tutorial-import-data-into-excel-and-create-a-data-model"
+    },
+    {
+      "title": "Справка и обучение по Excel",
+      "url": "https://support.microsoft.com/ru-ru/excel/"
+    }
+  ]
+}

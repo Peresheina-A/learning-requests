@@ -11,6 +11,8 @@ import time
 import unittest
 from urllib.error import HTTPError
 from urllib.request import Request, urlopen
+from urllib.request import build_opener, HTTPCookieProcessor, ProxyHandler
+from http.cookiejar import CookieJar
 
 
 PROJECT_DIR = Path(__file__).resolve().parents[1]
@@ -21,6 +23,26 @@ class RequestsApiTests(unittest.TestCase):
         self.temp_dir = tempfile.TemporaryDirectory()
         self.addCleanup(self.temp_dir.cleanup)
         self.database = Path(self.temp_dir.name) / "test.db"
+        with socket.socket() as sock:
+            sock.bind(('127.0.0.1', 0))
+            port = sock.getsockname()[1]
+        self.corporate_url = f'http://127.0.0.1:{port}'
+        corporate = subprocess.Popen(
+            [sys.executable, '-m', 'uvicorn', 'corporate_app:app', '--host', '127.0.0.1', '--port', str(port)],
+            cwd=PROJECT_DIR / 'corporate-service',
+            env=dict(os.environ, CORPORATE_DB=str(Path(self.temp_dir.name) / 'corporate.db')),
+            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+        )
+        self.addCleanup(self.stop_server, corporate)
+        probe = build_opener(ProxyHandler({}))
+        for _ in range(50):
+            try:
+                with probe.open(self.corporate_url + '/openapi.json', timeout=1):
+                    break
+            except OSError:
+                time.sleep(.2)
+        else:
+            self.fail('Корпоративный тестовый сервис не запустился')
         self.start_server()
 
     def start_server(self):
@@ -28,11 +50,12 @@ class RequestsApiTests(unittest.TestCase):
             sock.bind(("127.0.0.1", 0))
             port = sock.getsockname()[1]
         self.base_url = f"http://127.0.0.1:{port}"
+        self.client = build_opener(ProxyHandler({}), HTTPCookieProcessor(CookieJar()))
         self.server = subprocess.Popen(
             [sys.executable, "-m", "uvicorn", "app:app",
              "--host", "127.0.0.1", "--port", str(port)],
             cwd=PROJECT_DIR,
-            env=dict(os.environ, LEARNING_REQUESTS_DB=str(self.database)),
+            env=dict(os.environ, LEARNING_REQUESTS_DB=str(self.database), CORPORATE_SERVICE_URL=self.corporate_url),
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
         )
@@ -42,6 +65,8 @@ class RequestsApiTests(unittest.TestCase):
                 self.fail("Сервер завершился до запуска")
             try:
                 if self.call("/health") == (200, {"status": "ok"}):
+                    status, _ = self.call('/api/login', {'role':'student','login':'Anastasia','password':'1234'})
+                    self.assertEqual(status, 200)
                     return
             except OSError:
                 time.sleep(0.2)
@@ -60,7 +85,7 @@ class RequestsApiTests(unittest.TestCase):
             headers={"Content-Type": "application/json"},
         )
         try:
-            response = urlopen(request, timeout=3)
+            response = self.client.open(request, timeout=3)
         except HTTPError as error:
             response = error
         with response:
@@ -79,7 +104,7 @@ class RequestsApiTests(unittest.TestCase):
         with urlopen(self.base_url + "/", timeout=3) as response:
             self.assertEqual(response.status, 200)
             self.assertEqual(response.headers.get_content_type(), "text/html")
-            self.assertIn('id="create-form"', response.read().decode("utf-8"))
+            self.assertIn('id="chat-form"', response.read().decode("utf-8"))
 
     def test_create_and_read_request(self):
         saved = self.create()
@@ -89,6 +114,21 @@ class RequestsApiTests(unittest.TestCase):
         self.assertEqual(saved["reason"], "Первая задача; O'Brien")
         self.assertEqual(saved["status"], "created")
         self.assertEqual(self.call(f'/api/requests/{saved["id"]}'), (200, saved))
+
+    def test_login_logout_and_profile(self):
+        status, profile = self.call('/api/session')
+        self.assertEqual(status, 200)
+        self.assertEqual(profile['start_date'], '2026-11-09')
+        self.assertEqual(profile['end_date'], '2026-12-09')
+        self.assertEqual(profile['position'], 'Аналитик данных')
+        self.assertEqual(self.call('/api/logout', {})[0], 200)
+        self.assertEqual(self.call('/api/onboarding')[0], 401)
+        self.assertEqual(self.call('/api/requests', {'tool':'QA','reason':'Test'})[0], 401)
+        self.assertEqual(self.call('/api/login', {'role':'student','login':'Anastasia','password':'wrong'})[0], 401)
+        for role in ('manager','curator'):
+            self.assertEqual(self.call('/api/login', {'role':role,'login':'Anastasia','password':'1234'})[0], 403)
+        self.assertEqual(self.call('/api/login', {'role':'student','login':'Anastasia','password':'1234'})[0], 200)
+        self.assertEqual(self.call('/api/onboarding')[1]['start_date'], '2026-11-09')
 
     def test_invalid_data_is_not_saved(self):
         payloads = [
@@ -130,3 +170,4 @@ class RequestsApiTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
